@@ -1,0 +1,141 @@
+version: '3.9'
+services:
+  zookeeper:
+    image: bitnami/zookeeper
+    container_name: zookeeper-con
+    restart: always
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - cluster-net
+  kafka:
+    image: bitnami/kafka
+    container_name: kafka-con
+    restart: always
+    environment:
+      - KAFKA_ENABLE_KRAFT=no
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+    volumes:
+      - 'kafka-data-vol:/bitnami'
+    networks:
+      - cluster-net
+      - auth-net
+      - qna-net
+      - tag-net
+    depends_on:
+      - zookeeper
+  redis:
+    image: redis:alpine
+    container_name: redis-con
+    restart: always
+    networks:
+      - auth-net
+      - qna-net
+      - tag-net
+  auth-db:
+    image: mongo
+    container_name: auth-db-con
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - auth-db-vol:/data/db
+    networks:
+      - auth-net
+  auth-service:
+    build:
+      dockerfile: ./apps/node-auth-service/Dockerfile.dev
+      context: .
+    container_name: auth-service-con
+    restart: always
+    ports:
+      - 8001:8001
+    env_file:
+      - ./apps/node-auth-service/.env.prod
+    volumes:
+      - ./apps/node-auth-service:/app/apps/node-auth-service
+    networks:
+      - auth-net
+      - services-net
+    depends_on:
+      - kafka
+      - redis
+      - auth-db
+  qna-db:
+    image: postgres:alpine
+    container_name: qna-db-con
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=qna
+    volumes:
+      - qna-db-vol:/var/lib/postgresql/data
+    networks:
+      - qna-net
+  qna-service:
+    build:
+      dockerfile: ./apps/node-qna-service/Dockerfile.dev
+      context: .
+    container_name: qna-service-con
+    restart: always
+    ports:
+      - 8002:8002
+    volumes:
+      - ./apps/node-qna-service:/app/apps/node-qna-service
+    env_file:
+      - ./apps/node-qna-service/.env.prod
+    networks:
+      - qna-net
+      - services-net
+    depends_on:
+      - kafka
+      - redis
+      - qna-db
+  tag-db:
+    image: mongo
+    container_name: tag-db-con
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - tag-db-vol:/data/db
+    networks:
+      - tag-net
+  tag-service:
+    build:
+      dockerfile: ./apps/node-tag-service/Dockerfile.dev
+      context: .
+    container_name: tag-service-con
+    restart: always
+    ports:
+      - 8003:8003
+    volumes:
+      - ./apps/node-tag-service:/app/apps/node-tag-service
+    env_file:
+      - ./apps/node-tag-service/.env.prod
+    networks:
+      - tag-net
+      - services-net
+    depends_on:
+      - kafka
+      - redis
+      - tag-db
+
+volumes:
+  kafka-data-vol:
+  auth-db-vol:
+  tag-db-vol:
+  qna-db-vol:
+networks:
+  cluster-net:
+  auth-net:
+  qna-net:
+  tag-net:
+  services-net:

@@ -1,0 +1,30 @@
+FROM node:lts-alpine AS base
+
+FROM base AS builder
+RUN apk update
+WORKDIR /app
+RUN yarn global add turbo
+COPY . .
+RUN turbo prune --scope=stackoverflow-tag --docker
+
+# Add lockfile and package.json's of isolated subworkspace
+FROM base AS installer
+RUN apk update
+WORKDIR /app
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/yarn.lock ./yarn.lock
+COPY --from=builder /app/turbo.json ./turbo.json
+RUN yarn install
+
+FROM base AS sourcer
+WORKDIR /app
+COPY --from=installer /app/ .
+COPY --from=builder /app/out/full/ .
+COPY .gitignore .gitignore
+
+FROM base as runner
+WORKDIR /app
+COPY --from=sourcer /app/ .
+EXPOSE 8001
+WORKDIR /app/apps/node-tag-service
+CMD ["yarn","run","dev"]

@@ -1,0 +1,17 @@
+{
+  "extends": "stackoverflow-config/tsconfig-server.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/"],
+  "exclude": [
+    "node_modules",
+    ".turbo",
+    "coverage",
+    "dist",
+    "src/**/__tests__",
+    "src/**/__mocks__",
+    "src/**/test-setup.ts"
+  ]
+}

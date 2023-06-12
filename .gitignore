@@ -1,0 +1,11 @@
+node_modules
+logs
+certs
+.env
+.env.prod
+.env.test
+coverage
+.turbo
+dist
+build
+.next

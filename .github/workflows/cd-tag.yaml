@@ -1,0 +1,18 @@
+name: CD-tag
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/node-tag-service/**'
+jobs:
+  deploy:
+    name: Deploy tag api
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Download build artifacts
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: tag-build
+      - name: Deploy the application
+        run: echo "Deploying tag api..."

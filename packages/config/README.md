@@ -1,0 +1,1 @@
+# Common eslint,jest,tsc configurations

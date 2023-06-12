@@ -1,0 +1,263 @@
+openapi: 3.0.0
+info:
+  title: Auth service API
+  description: This is Auth service API application made with Express and documented with Swagger
+  version: 1.0.0
+  contact:
+    email: abc@gmail.com
+servers:
+  - url: http://localhost:8001
+    description: Local Server
+
+paths:
+  /api/v1/register:
+    post:
+      tags:
+        - Register
+      summary: Registers a new user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                avatar:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                    cloudinaryId:
+                      type: string
+              example:
+                {
+                  username: abc,
+                  password: '123456789',
+                  avatar: { url: https://www.url.com, cloudinaryId: abcdglhslhd },
+                }
+      responses:
+        '400':
+          $ref: '#components/responses/400'
+        '403':
+          $ref: '#components/responses/403'
+        '201':
+          $ref: '#components/responses/201'
+  /api/v1/login:
+    post:
+      tags:
+        - Login
+      summary: Logins a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              example: { username: abc, password: '123456789' }
+      responses:
+        '400':
+          $ref: '#components/responses/400'
+        '404':
+          $ref: '#components/responses/404'
+        '200':
+          $ref: '#components/responses/200'
+  /api/v1/logout:
+    post:
+      tags:
+        - Logout
+      summary: Logs out the user.
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '200':
+          $ref: '#components/responses/200'
+  /api/v1/refreshToken:
+    get:
+      tags:
+        - RefreshToken
+      summary: Generates new jwt tokens.
+      responses:
+        '401':
+          description: Invalid refresh token
+        '200':
+          $ref: '#components/responses/200'
+  /api/v1/whoAmI:
+    get:
+      tags:
+        - WhoAmI
+      summary: Get details about the logged in user.
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '200':
+          $ref: '#components/responses/200'
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: '#components/schemas/User'
+  /api/v1/users:
+    get:
+      tags:
+        - Users List
+      summary: Get list of users
+      parameters:
+        - in: query
+          name: username
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: pageNo
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, oldest, name, popular]
+          required: false
+      responses:
+        '200':
+          $ref: '#components/responses/200'
+          schema:
+            type: object
+            properties:
+              users:
+                type: array
+                items:
+                  $ref: '#components/schemas/User'
+              totalCount: integer
+  /api/v1/users/{id}:
+    get:
+      tags:
+        - Single User
+      summary: Get user details by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '400':
+          $ref: '#components/responses/400'
+        '404':
+          $ref: '#components/responses/404'
+        '200':
+          $ref: '#components/responses/200'
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: '#components/schemas/User'
+  /api/v1/users/{id}/profileViews:
+    patch:
+      tags:
+        - ProfileViews
+      summary: Updates user profile views
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '400':
+          $ref: '#components/responses/400'
+        '404':
+          $ref: '#components/responses/404'
+        '403':
+          $ref: '#components/responses/403'
+        '200':
+          $ref: '#components/responses/200'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the user
+        username:
+          type: string
+          description: The username of the user
+        avatar:
+          type: object
+          properties:
+            url:
+              type: string
+              description: The user profile image link
+            cloudinaryId:
+              type: string
+              description: The user profile image id
+        profileViews:
+          type: string[]
+          description: The list of users who viewed this user profile
+        questions:
+          type: string[]
+          description: The list of questions this user has created
+        answers:
+          type: string[]
+          description: The list of answers this user has posted
+        comments:
+          type: string[]
+          description: The list of comments this user has posted
+        createdAt:
+          type: Date
+          description: The user created date
+        updatedAt:
+          type: Date
+          description: The user updated date
+        version:
+          type: integer
+          description: The number to handle concurrency
+      example:
+        {
+          id: bldh9374937ldh9338,
+          username: abc,
+          avatar: { url: https://www.url.com, cloudinaryId: abcdglhslhd },
+          profileViews: [lhskjd938493834, lskjlk93849384937],
+          questions: [lhskjd938493834, lskjlk93849384937],
+          answers: [lhskjd938493834, lskjlk93849384937],
+          comments: [lhskjd938493834, lskjlk93849384937],
+          createdAt: '2023‑07‑30',
+          updatedAt: '2023‑07‑30',
+          version: 0,
+        }
+
+  responses:
+    '400':
+      description: Bad Request - invalid or missing data
+      contents: application/json
+    '401':
+      description: Unauthorized - the user is not logged in
+      contents: application/json
+    '404':
+      description: Not found - the user was not found
+      contents: application/json
+    '403':
+      description: Forbidden - there is some conflict
+      contents: application/json
+    '200':
+      description: Success - the operation was successfull
+      contents: application/json
+    '201':
+      description: Created - the user is created
+      contents: application/json

@@ -1,0 +1,51 @@
+name: CI-auth
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - master
+    paths:
+      - 'apps/node-auth-service/**'
+jobs:
+  test:
+    name: Runs tests
+    runs-on: ubuntu-latest
+    env:
+      REDIS_URI: redis://localhost:6379
+      REDIS_TTL: 60
+      HASH_SALT_ROUNDS: 10
+      ACCESS_TOKEN_EXPIRY: 1m
+      REFRESH_TOKEN_EXPIRY: 1y
+      ACCESS_TOKEN_COOKIE_EXPIRY: 86400000
+      REFRESH_TOKEN_COOKIE_EXPIRY: 31536000000
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Execute test suits
+        run: yarn run test --filter=stackoverflow-auth
+  build:
+    needs: [test]
+    name: Create production build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: yarn install --production
+      - name: Generage build
+        run: yarn run build --filter=stackoverflow-auth
+      - name: Upload build artificats
+        uses: actions/upload-artifact@v3
+        with:
+          name: auth-build
+          path: apps/node-auth-service/dist

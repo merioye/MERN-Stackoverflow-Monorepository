@@ -1,0 +1,52 @@
+name: CI-qna
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - master
+    paths:
+      - 'apps/node-qna-service/**'
+jobs:
+  test:
+    name: Runs tests
+    runs-on: ubuntu-latest
+    env:
+      REDIS_URI: redis://localhost:6379
+      REDIS_TTL: 60000
+      JWKS_URI: https://umairsaleem1.github.io/jwks.json
+      POSTGRES_DATABASE_TEST: qna_test
+      POSTGRES_USER_TEST: admin
+      POSTGRES_PASSWORD_TEST: password
+      POSTGRES_URI_TEST: postgres://admin:password@localhost:5432/qna_test
+      TESTING_JWT_SECRET: lajldjldjfljsljdlsd
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Execute test suits
+        run: yarn run test --filter=stackoverflow-qna
+  build:
+    needs: [test]
+    name: Create production build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: yarn install --production
+      - name: Generage build
+        run: yarn run build --filter=stackoverflow-qna
+      - name: Upload build artificats
+        uses: actions/upload-artifact@v3
+        with:
+          name: qna-build
+          path: apps/node-qna-service/dist

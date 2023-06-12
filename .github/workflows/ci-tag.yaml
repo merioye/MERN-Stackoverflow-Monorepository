@@ -1,0 +1,48 @@
+name: CI-tag
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - master
+    paths:
+      - 'apps/node-tag-service/**'
+jobs:
+  test:
+    name: Runs tests
+    runs-on: ubuntu-latest
+    env:
+      REDIS_URI: redis://localhost:6379
+      REDIS_TTL: 60
+      JWKS_URI: https://umairsaleem1.github.io/jwks.json
+      TESTING_JWT_SECRET: lajldjldjfljsljdlsd
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Execute test suits
+        run: yarn run test --filter=stackoverflow-tag
+  build:
+    needs: [test]
+    name: Create production build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: yarn install --production
+      - name: Generage build
+        run: yarn run build --filter=stackoverflow-tag
+      - name: Upload build artificats
+        uses: actions/upload-artifact@v3
+        with:
+          name: tag-build
+          path: apps/node-tag-service/dist

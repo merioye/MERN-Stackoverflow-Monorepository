@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Server",
+    "extends": "./tsconfig-common.json",
+    "compilerOptions": {
+      "target": "es6",
+      "lib": ["es6"],
+      "noEmit": false,
+      "module": "commonjs",
+      "sourceMap": true
+    }
+}
+  

@@ -1,0 +1,277 @@
+openapi: 3.0.0
+info:
+  title: QNA service API
+  description: This is QNA service API application made with Express and documented with Swagger
+  version: 1.0.0
+  contact:
+    email: abc@gmail.com
+servers:
+  - url: http://localhost:8002
+    description: Local Server
+
+paths:
+  /api/v1/questions:
+    post:
+      tags:
+        - Create Question
+      summary: Creates a new question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+                tagsIds:
+                  type: string[]
+              example:
+                {
+                  title: Question title,
+                  body: Question body,
+                  tagsIds: [lhskjd938493834, lskjlk93849384937],
+                }
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '400':
+          $ref: '#components/responses/400'
+        '404':
+          $ref: '#components/responses/404:u'
+        '201':
+          $ref: '#components/responses/201'
+    get:
+      tags:
+        - Questions List
+      summary: Get list of questions
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: pageNo
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, oldest, name, popular]
+          required: false
+      responses:
+        '200':
+          $ref: '#components/responses/200'
+          schema:
+            type: object
+            properties:
+              questions:
+                type: array
+                items:
+                  $ref: '#components/schemas/Question'
+              totalCount:
+                type: integer
+  /api/v1/questions/{id}:
+    get:
+      tags:
+        - Single Question
+      summary: Get question details by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '400':
+          $ref: '#components/responses/400'
+        '404':
+          $ref: '#components/responses/404:q'
+        '200':
+          $ref: '#components/responses/200'
+    delete:
+      tags:
+        - Delete Question
+      summary: Deletes question by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '400':
+          $ref: '#components/responses/400'
+        '403':
+          $ref: '#components/responses/403'
+        '200':
+          $ref: '#components/responses/200'
+  /api/v1/questions/{id}/questionViews:
+    patch:
+      tags:
+        - QuestionViews
+      summary: Updates question views
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '400':
+          $ref: '#components/responses/400'
+        '200':
+          $ref: '#components/responses/200'
+        '404':
+          $ref: '#components/responses/404:q'
+        '403':
+          $ref: '#components/responses/403'
+
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the tag
+        name:
+          type: string
+          description: The name of the tag
+        version:
+          type: number
+          description: The number to handle concurrency
+      example: { id: 507f1f77bcf86cd799439011, name: .NET, version: 0 }
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the user
+        username:
+          type: string
+          description: The username of the user
+        avatar:
+          type: object
+          properties:
+            url:
+              type: string
+              description: The user profile image link
+            cloudinaryId:
+              type: string
+              description: The user profile image id
+        version:
+          type: integer
+          description: The number to handle concurrency
+      example:
+        {
+          id: 507f1f77bcf86cd799439011,
+          username: abc,
+          avatar: { url: https://www.url.com, cloudinaryId: alshd },
+          version: 0,
+        }
+    Reaction:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the reaction
+        body:
+          type: string
+          description: The body of the reaction
+        createdAt:
+          type: Date
+          description: The reaction created date
+        updatedAt:
+          type: Date
+          description: The reaction updated date
+        version:
+          type: integer
+          description: The number to handle concurrency
+      example:
+        {
+          id: 507f1f77bcf86cd799439011,
+          body: reaction body,
+          createdAt: '2023‑07‑30',
+          updatedAt: '2023‑07‑30',
+          version: 0,
+        }
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the question
+        title:
+          type: string
+          description: The title of the question
+        body:
+          type: string
+          description: The body of the question
+        tags:
+          type: array
+          items:
+            $ref: '#components/schemas/Tag'
+          description: The list of tags the question belongs to
+        author:
+          $ref: '#components/schemas/User'
+          description: The details about the author of the question
+        comments:
+          type: array
+          items:
+            $ref: '#components/schemas/Reaction'
+          description: The list of comments posted on this question
+        answers:
+          type: array
+          items:
+            $ref: '#components/schemas/Reaction'
+          description: The list of answers posted on this question
+        questionViewsCount:
+          type: integer
+          description: The question views count number
+        createdAt:
+          type: Date
+          description: The question created date
+        updatedAt:
+          type: Date
+          description: The question updated date
+        version:
+          type: integer
+          description: The number to handle concurrency
+
+  responses:
+    '400':
+      description: Bad Request - invalid or missing data
+      contents: application/json
+    '401':
+      description: Unauthorized - the user is not logged in
+      contents: application/json
+    '404:u':
+      description: Not found - the user was not found
+      contents: application/json
+    '404:q':
+      description: Not found - the question was not found
+      contents: application/json
+    '403':
+      description: Forbidden - there is some conflict
+      contents: application/json
+    '200':
+      description: Success - the operation was successfull
+      contents: application/json
+    '201':
+      description: Created - the resource is created
+      contents: application/json

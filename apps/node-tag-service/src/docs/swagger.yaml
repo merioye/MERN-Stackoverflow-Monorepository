@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: Tag service API
+  description: This is Tag service API application made with Express and documented with Swagger
+  version: 1.0.0
+  contact:
+    email: abc@gmail.com
+servers:
+  - url: http://localhost:8003
+    description: Local Server
+
+paths:
+  /api/v1/tags:
+    post:
+      tags:
+        - Create Tag
+      summary: Creates a new tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              example: { name: php }
+      responses:
+        '401':
+          $ref: '#components/responses/401'
+        '400':
+          $ref: '#components/responses/400'
+        '200':
+          $ref: '#components/responses/200'
+        '201':
+          $ref: '#components/responses/201'
+          schema:
+            type: object
+            properties:
+              tag:
+                $ref: '#components/schemas/Tag'
+    get:
+      tags:
+        - Tags List
+      summary: Get list of tags
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: pageNo
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, oldest, name, popular]
+          required: false
+      responses:
+        '200':
+          $ref: '#components/responses/200'
+          schema:
+            type: object
+            properties:
+              tags:
+                type: array
+                items:
+                  $ref: '#components/schemas/Tag'
+              totalCount: integer
+
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the tag
+        name:
+          type: string
+          description: The name of the tag
+        createdAt:
+          type: Date
+          description: The tag created date
+        updatedAt:
+          type: Date
+          description: The tag updated date
+        version:
+          type: integer
+          description: The number to handle concurrency
+      example:
+        {
+          id: bldh9374937ldh9338,
+          name: php,
+          createdAt: '2023‑07‑30',
+          updatedAt: '2023‑07‑30',
+          version: 0,
+        }
+  responses:
+    '400':
+      description: Bad Request - invalid or missing data
+      contents: application/json
+    '401':
+      description: Unauthorized - the user is not logged in
+      contents: application/json
+    '403':
+      description: Forbidden - there is some conflict
+      contents: application/json
+    '200':
+      description: Success - the operation was successfull
+      contents: application/json
+    '201':
+      description: Created - the tag is created
+      contents: application/json

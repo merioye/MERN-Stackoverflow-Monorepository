@@ -1,0 +1,18 @@
+name: CD-qna
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/node-qna-service/**'
+jobs:
+  deploy:
+    name: Deploy qna api
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Download build artifacts
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: qna-build
+      - name: Deploy the application
+        run: echo "Deploying qna api..."
