@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qna-api-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qna-api
+  template:
+    metadata:
+      labels:
+        app: qna-api
+    spec:
+      containers:
+        - name: qna-api-con
+          image: umairsaleem1/stackoverflow-qna-api:1.0
+          envFrom:
+            - configMapRef:
+                name: qna-api-config-v1.0
+            - secretRef:
+                name: qna-api-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qna-api-svc
+spec:
+  selector:
+    app: qna-api
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qna-api-config-v1.0
+data:
+  NODE_ENV: production
+  POSTGRES_DATABASE: qna
+  POSTGRES_DATABASE_TEST: qna_test
+  REDIS_URI: redis://redis-svc:6379
+  REDIS_TTL: "60000"
+  PORT: "8002"
+  JWKS_URI: http://auth-api-svc:8001/api/auth/v1/jwks.json
+  KAFKA_CLIENT_ID: qna-service
+  KAFKA_NUM_PARTITIONS: "1"
+  KAFKA_REPLICATION_FACTOR: "1"
+  KAFKA_BROKERS_LIST: kafka-svc:9092
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qna-api-secret
+stringData:
+  POSTGRES_URI: postgres://admin:password@qna-db-svc:5432/qna
+  POSTGRES_URI_TEST: postgres://admin:password@qna-db-svc:5432/qna_test

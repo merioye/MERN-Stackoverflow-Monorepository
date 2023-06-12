@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qna-db-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qna-db
+  template:
+    metadata:
+      labels:
+        app: qna-db
+    spec:
+      containers:
+        - name: qna-db-con
+          image: postgres:alpine
+          envFrom:
+            - secretRef:
+                name: qna-db-secret
+          volumeMounts:
+            - name: qna-db-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: qna-db-data
+          persistentVolumeClaim:
+            claimName: qna-db-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qna-db-svc
+spec:
+  selector:
+    app: qna-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qna-db-secret
+stringData:
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  POSTGRES_DB: qna
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qna-db-pvc
+spec:
+  storageClassName: hostpath
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: qna-db-pv
+spec:
+  storageClassName: hostpath
+  persistentVolumeReclaimPolicy: Delete
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: "/mnt/qna data"
+    type: DirectoryOrCreate

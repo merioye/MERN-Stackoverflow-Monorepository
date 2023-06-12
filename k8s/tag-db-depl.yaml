@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tag-db-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tag-db
+  template:
+    metadata:
+      labels:
+        app: tag-db
+    spec:
+      containers:
+        - name: tag-db-con
+          image: mongo:latest
+          envFrom:
+            - secretRef:
+                name: tag-db-secret
+          volumeMounts:
+            - name: tag-db-data
+              mountPath: /data/db
+      volumes:
+        - name: tag-db-data
+          persistentVolumeClaim:
+            claimName: tag-db-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tag-db-svc
+spec:
+  selector:
+    app: tag-db
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tag-db-secret
+stringData:
+  MONGO_INITDB_ROOT_USERNAME: admin
+  MONGO_INITDB_ROOT_PASSWORD: password
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tag-db-pvc
+spec:
+  storageClassName: hostpath
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tag-db-pv
+spec:
+  storageClassName: hostpath
+  persistentVolumeReclaimPolicy: Delete
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: "/mnt/tag data"
+    type: DirectoryOrCreate
