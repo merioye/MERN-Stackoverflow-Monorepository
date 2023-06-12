@@ -13,7 +13,7 @@
     "build": "tsc && copyfiles -u 1 src/docs/swagger.yaml dist",
     "test:watch": "jest --watchAll",
     "coverage": "jest --coverage",
-    "lint": "eslint src/**/*.{js,ts,json} --fix --max-warning=0",
+    "lint": "eslint src/**/*.{js,ts,json} --fix --max-warnings=0",
     "check-types": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf .turbo && rimraf node_modules && rimraf dist"
   },

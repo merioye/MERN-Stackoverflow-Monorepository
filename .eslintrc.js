@@ -105,5 +105,6 @@ module.exports = {
     '**/coverage',
     '.turbo',
     '**/.turbo',
+    'TopicsEnum.ts',
   ],
 }

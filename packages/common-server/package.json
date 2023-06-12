@@ -9,7 +9,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc",
     "lint:build": "yarn run lint && tsc",
-    "lint": "eslint src/**/*.{js,ts,json} --fix",
+    "lint": "eslint src/**/*.{js,ts,json} --fix --max-warnings=0",
     "check-types": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf .turbo && rimraf node_modules && rimraf dist"
   },
